@@ -10,6 +10,7 @@ import {
 
 interface ScheduleBlockProps {
   block: SplitBlock;
+  onClick?: (originalId: string) => void;
 }
 
 /**
@@ -18,6 +19,7 @@ interface ScheduleBlockProps {
  * 
  * Props:
  * - block: SplitBlock (분할된 블록 데이터)
+ * - onClick: 블록 클릭 콜백 (역 데이터 흐름)
  * 
  * State: 없음 (순수 프레젠테이션 컴포넌트)
  * 
@@ -27,7 +29,7 @@ interface ScheduleBlockProps {
  * - 중간 블록: border 없음, rounded 없음
  * - 단일 블록 (isFirstBlock && isLastBlock): 전체 border + 전체 rounded
  */
-export function ScheduleBlock({ block }: ScheduleBlockProps) {
+export function ScheduleBlock({ block, onClick }: ScheduleBlockProps) {
   // 색상별 배경색 클래스 매핑
   const colorClasses: Record<string, string> = {
     lavender: "bg-lavender",
@@ -81,6 +83,13 @@ export function ScheduleBlock({ block }: ScheduleBlockProps) {
     </div>
   );
 
+  // 클릭 핸들러
+  const handleClick = () => {
+    if (onClick) {
+      onClick(block.originalId);
+    }
+  };
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -99,6 +108,7 @@ export function ScheduleBlock({ block }: ScheduleBlockProps) {
             height: `${block.heightPercent}%`,
             minHeight: "18px",
           }}
+          onClick={handleClick}
         >
           {/* 첫 번째 블록에만 title과 description 표시 */}
           {block.isFirstBlock && (

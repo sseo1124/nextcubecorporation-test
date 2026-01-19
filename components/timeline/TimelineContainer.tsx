@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { ScheduleData } from "@/lib/types";
+import type { ScheduleData, ScheduleStatus } from "@/lib/types";
 import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import { splitScheduleItems, groupBlocksByHour } from "@/lib/utils/schedule-splitter";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { TimelineHeader } from "./TimelineHeader";
 import { TimeAxis } from "./TimeAxis";
 import { ScheduleColumn } from "./ScheduleColumn";
+import { ScheduleFormDialog } from "@/components/schedule-form";
+import { useScheduleData, type ScheduleFormData } from "@/hooks/useScheduleData";
 import { getWeekDates, calculateTotalHours } from "@/mock/schedule-data";
 
 interface TimelineContainerProps {
@@ -27,6 +29,11 @@ interface TimelineContainerProps {
  * 
  * State:
  * - selectedDate: 사용자가 선택한 날짜 (변경 가능)
+ * - items: 스케줄 아이템 배열 (useScheduleData 훅으로 관리)
+ * - isFormOpen: 폼 다이얼로그 열림 상태
+ * - editingItem: 수정 중인 아이템
+ * - defaultStatus: 새 아이템 생성 시 기본 status
+ * - defaultStartTime/defaultEndTime: 새 아이템 생성 시 기본 시간
  * 
  * 파생 데이터 (useMemo로 계산):
  * - weekDates: 일주일 날짜 배열
@@ -47,6 +54,25 @@ export function TimelineContainer({
     defaultDate || scheduleData.date
   );
 
+  // 스케줄 데이터 관리 (useScheduleData 훅)
+  const {
+    items,
+    addItem,
+    updateItem,
+    deleteItem,
+    getItemById,
+  } = useScheduleData(scheduleData.items);
+
+  // 폼 다이얼로그 상태
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [defaultStatus, setDefaultStatus] = useState<ScheduleStatus>("planned");
+  const [defaultStartTime, setDefaultStartTime] = useState("09:00");
+  const [defaultEndTime, setDefaultEndTime] = useState("10:00");
+
+  // 수정 중인 아이템
+  const editingItem = editingItemId ? getItemById(editingItemId) : undefined;
+
   // === 파생 데이터 (계산 가능하므로 State 아님) ===
   // 일주일 날짜 배열
   const weekDates = useMemo(
@@ -56,8 +82,8 @@ export function TimelineContainer({
 
   // 스케줄 아이템을 시간별 블록으로 분할
   const splitBlocks = useMemo(
-    () => splitScheduleItems(scheduleData.items),
-    [scheduleData.items]
+    () => splitScheduleItems(items),
+    [items]
   );
 
   // 시간별로 그룹화
@@ -68,25 +94,56 @@ export function TimelineContainer({
 
   // 총 시간 계산
   const plannedTotalHours = useMemo(
-    () => calculateTotalHours(scheduleData.items, "planned"),
-    [scheduleData.items]
+    () => calculateTotalHours(items, "planned"),
+    [items]
   );
 
   const executedTotalHours = useMemo(
-    () => calculateTotalHours(scheduleData.items, "executed"),
-    [scheduleData.items]
+    () => calculateTotalHours(items, "executed"),
+    [items]
   );
 
   // 시간 범위: 항상 00:00 ~ 23:00 (24개 Row)
-  // PRD 명세: "표시 가능 시간 범위: 00:00 ~ 23:59 (총 24개 Row)"
-  // 상수이므로 State나 useMemo 불필요
   const startHour = 0;
   const endHour = 23;
 
   // === 역 데이터 흐름 (이벤트 핸들러) ===
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
-    // TODO: 날짜 변경 시 API 호출하여 해당 날짜의 데이터 로드
+  };
+
+  // 빈 영역 클릭 시 새 스케줄 추가 다이얼로그 열기
+  const handleEmptyClick = (hour: number, status: ScheduleStatus) => {
+    setEditingItemId(null);
+    setDefaultStatus(status);
+    // 클릭한 시간대를 기본 시작/종료 시간으로 설정
+    const startTime = `${String(hour).padStart(2, "0")}:00`;
+    const endTime = `${String(hour + 1).padStart(2, "0")}:00`;
+    setDefaultStartTime(startTime);
+    setDefaultEndTime(endTime);
+    setIsFormOpen(true);
+  };
+
+  // 스케줄 수정 다이얼로그 열기
+  const handleEditClick = (itemId: string) => {
+    setEditingItemId(itemId);
+    setIsFormOpen(true);
+  };
+
+  // 폼 제출 핸들러
+  const handleFormSubmit = (data: ScheduleFormData) => {
+    if (editingItemId) {
+      updateItem(editingItemId, data);
+    } else {
+      addItem(data);
+    }
+  };
+
+  // 삭제 핸들러
+  const handleDelete = () => {
+    if (editingItemId) {
+      deleteItem(editingItemId);
+    }
   };
 
   return (
@@ -118,6 +175,8 @@ export function TimelineContainer({
               startHour={startHour}
               endHour={endHour}
               rowHeight={DEFAULT_ROW_HEIGHT}
+              onBlockClick={handleEditClick}
+              onEmptyClick={handleEmptyClick}
             />
 
             {/* 구분선 */}
@@ -132,10 +191,24 @@ export function TimelineContainer({
               startHour={startHour}
               endHour={endHour}
               rowHeight={DEFAULT_ROW_HEIGHT}
+              onBlockClick={handleEditClick}
+              onEmptyClick={handleEmptyClick}
             />
           </div>
         </ScrollArea>
       </Card>
+
+      {/* 스케줄 추가/수정 다이얼로그 */}
+      <ScheduleFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        onDelete={editingItemId ? handleDelete : undefined}
+        editItem={editingItem}
+        defaultStatus={defaultStatus}
+        defaultStartTime={defaultStartTime}
+        defaultEndTime={defaultEndTime}
+      />
     </TooltipProvider>
   );
 }

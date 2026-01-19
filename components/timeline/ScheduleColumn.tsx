@@ -12,6 +12,8 @@ interface ScheduleColumnProps {
   startHour?: number;
   endHour?: number;
   rowHeight?: number;
+  onBlockClick?: (originalId: string) => void;
+  onEmptyClick?: (hour: number, status: ScheduleStatus) => void;
 }
 
 /**
@@ -25,6 +27,8 @@ interface ScheduleColumnProps {
  * - blocksByHour: 시간별 블록 맵
  * - startHour/endHour: 표시할 시간 범위
  * - rowHeight: Row 높이
+ * - onBlockClick: 블록 클릭 콜백 (역 데이터 흐름)
+ * - onEmptyClick: 빈 영역 클릭 콜백 (역 데이터 흐름)
  * 
  * State: 없음 (순수 프레젠테이션 컴포넌트)
  */
@@ -36,11 +40,20 @@ export function ScheduleColumn({
   startHour = 0,
   endHour = 23,
   rowHeight = DEFAULT_ROW_HEIGHT,
+  onBlockClick,
+  onEmptyClick,
 }: ScheduleColumnProps) {
   const hours = Array.from(
     { length: endHour - startHour + 1 },
     (_, i) => startHour + i
   );
+
+  // 빈 영역 클릭 시 status 정보와 함께 전달
+  const handleEmptyClick = (hour: number) => {
+    if (onEmptyClick) {
+      onEmptyClick(hour, status);
+    }
+  };
 
   return (
     <div className="flex-1 min-w-0 flex flex-col">
@@ -73,6 +86,8 @@ export function ScheduleColumn({
               hour={hour}
               blocks={hourBlocks}
               height={rowHeight}
+              onBlockClick={onBlockClick}
+              onEmptyClick={handleEmptyClick}
             />
           );
         })}
