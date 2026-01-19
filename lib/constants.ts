@@ -75,3 +75,19 @@ export const TIME_AXIS_WIDTH_MOBILE = 60;
  */
 export const TEXT_DISPLAY_THRESHOLD_SMALL = 30; // 이보다 작으면 제목만
 export const TEXT_DISPLAY_THRESHOLD_MEDIUM = 60; // 이보다 크면 전체 표시
+
+/**
+ * Z-Index 계층 구조
+ * 
+ * 시간 블록 기본: 10~100 (겹침 처리용 동적 계산)
+ * 시간 블록 hover: 기본 + 100 = 최대 200
+ * Dialog Overlay: 1000
+ * Dialog Content: 1001
+ */
+export const Z_INDEX = {
+  BLOCK_BASE: 10,
+  BLOCK_MAX: 100,
+  BLOCK_HOVER_BONUS: 100,
+  DIALOG_OVERLAY: 1000,
+  DIALOG_CONTENT: 1001,
+} as const;
