@@ -84,6 +84,7 @@ export const TEXT_DISPLAY_THRESHOLD_MEDIUM = 60; // 이보다 크면 전체 표�
  * Row Resize Handle: 300 (시간 블록 hover보다 위)
  * Dialog Overlay: 1000
  * Dialog Content: 1001
+ * Select Content: 1100 (Dialog 위에 표시되어야 함)
  */
 export const Z_INDEX = {
   BLOCK_BASE: 10,
@@ -92,4 +93,5 @@ export const Z_INDEX = {
   ROW_RESIZE_HANDLE: 300,
   DIALOG_OVERLAY: 1000,
   DIALOG_CONTENT: 1001,
+  SELECT_CONTENT: 1100,
 } as const;
