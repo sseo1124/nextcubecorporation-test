@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { ScheduleData, ScheduleStatus } from "@/lib/types";
 import { DEFAULT_ROW_HEIGHT, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT } from "@/lib/constants";
 import { splitScheduleItems, groupBlocksByHour } from "@/lib/utils/schedule-splitter";
@@ -38,7 +38,7 @@ interface TimelineContainerProps {
  * - defaultStatus: 새 아이템 생성 시 기본 status
  * - defaultStartTime/defaultEndTime: 새 아이템 생성 시 기본 시간
  * 
- * 파생 데이터 (useMemo로 계산):
+ * 파생 데이터 (React Compiler가 자동 메모이제이션):
  * - weekDates: 일주일 날짜 배열
  * - splitBlocks: 시간별로 분할된 블록 배열
  * - blocksByHour: 시간별 블록 그룹
@@ -134,33 +134,18 @@ export function TimelineContainer({
 
   // === 파생 데이터 (계산 가능하므로 State 아님) ===
   // 일주일 날짜 배열
-  const weekDates = useMemo(
-    () => getWeekDates(new Date(selectedDate)),
-    [selectedDate]
-  );
+  const weekDates = getWeekDates(new Date(selectedDate));
 
   // 스케줄 아이템을 시간별 블록으로 분할
-  const splitBlocks = useMemo(
-    () => splitScheduleItems(items),
-    [items]
-  );
+  const splitBlocks = splitScheduleItems(items);
 
   // 시간별로 그룹화
-  const blocksByHour = useMemo(
-    () => groupBlocksByHour(splitBlocks),
-    [splitBlocks]
-  );
+  const blocksByHour = groupBlocksByHour(splitBlocks);
 
   // 총 시간 계산
-  const plannedTotalHours = useMemo(
-    () => calculateTotalHours(items, "planned"),
-    [items]
-  );
+  const plannedTotalHours = calculateTotalHours(items, "planned");
 
-  const executedTotalHours = useMemo(
-    () => calculateTotalHours(items, "executed"),
-    [items]
-  );
+  const executedTotalHours = calculateTotalHours(items, "executed");
 
   // 시간 범위: 항상 00:00 ~ 23:00 (24개 Row)
   const startHour = 0;
@@ -196,7 +181,7 @@ export function TimelineContainer({
   };
 
   // Row 높이 변경 핸들러 (동적 리사이징)
-  const handleRowResize = useCallback((hour: number, newHeight: number) => {
+  const handleRowResize = (hour: number, newHeight: number) => {
     // 최소/최대 높이 제한 적용
     const clampedHeight = Math.max(MIN_ROW_HEIGHT, Math.min(MAX_ROW_HEIGHT, newHeight));
     
@@ -204,7 +189,7 @@ export function TimelineContainer({
       ...prev,
       [hour]: clampedHeight,
     }));
-  }, []);
+  };
 
   // 다이얼로그 닫힐 때 선택 해제
   const handleFormOpenChange = (open: boolean) => {

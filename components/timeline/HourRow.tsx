@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import type { SplitBlock } from "@/lib/types";
 import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -51,7 +50,7 @@ export function HourRow({
   onResize,
 }: HourRowProps) {
   // 블록별 z-index 계산 (파생 데이터)
-  const zIndexMap = useMemo(() => calculateZIndex(blocks), [blocks]);
+  const zIndexMap = calculateZIndex(blocks);
 
   // 빈 영역 클릭 핸들러 (블록이 아닌 영역 클릭 시)
   const handleRowClick = (e: React.MouseEvent<HTMLDivElement>) => {

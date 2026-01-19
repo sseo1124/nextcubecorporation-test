@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import type { SplitBlock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
@@ -84,10 +83,8 @@ export function ScheduleBlock({
   const bgColorClass = (isHovered || isSelected) ? colorClass.solid : colorClass.base;
 
   // 블록의 실제 픽셀 높이 계산 및 텍스트 표시 모드 결정 (파생 데이터)
-  const displayText = useMemo(() => {
-    const actualHeight = calculateActualHeight(rowHeight, block.heightPercent);
-    return getDisplayText(block.title, block.description, actualHeight);
-  }, [rowHeight, block.heightPercent, block.title, block.description]);
+  const actualHeight = calculateActualHeight(rowHeight, block.heightPercent);
+  const displayText = getDisplayText(block.title, block.description, actualHeight);
 
   // 연속 블록 시각적 연결을 위한 border/rounded 클래스 결정
   const isSingleBlock = block.isFirstBlock && block.isLastBlock;

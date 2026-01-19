@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { MIN_ROW_HEIGHT, MAX_ROW_HEIGHT, Z_INDEX } from "@/lib/constants";
 
@@ -34,41 +34,38 @@ export function RowResizeHandle({
   const [startHeight, setStartHeight] = useState(currentHeight);
 
   // 드래그 시작
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
     setStartY(e.clientY);
     setStartHeight(currentHeight);
-  }, [currentHeight]);
-
-  // 드래그 중
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-
-    const deltaY = e.clientY - startY;
-    const newHeight = Math.max(
-      MIN_ROW_HEIGHT,
-      Math.min(MAX_ROW_HEIGHT, startHeight + deltaY)
-    );
-
-    onResize(hour, newHeight);
-  }, [isDragging, startY, startHeight, hour, onResize]);
-
-  // 드래그 종료
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  };
 
   // 전역 마우스 이벤트 리스너
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      // 드래그 중 텍스트 선택 방지
-      document.body.style.userSelect = "none";
-      document.body.style.cursor = "row-resize";
-    }
+    if (!isDragging) return;
+
+    // 드래그 중
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - startY;
+      const newHeight = Math.max(
+        MIN_ROW_HEIGHT,
+        Math.min(MAX_ROW_HEIGHT, startHeight + deltaY)
+      );
+      onResize(hour, newHeight);
+    };
+
+    // 드래그 종료
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    // 드래그 중 텍스트 선택 방지
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "row-resize";
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
@@ -76,7 +73,7 @@ export function RowResizeHandle({
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, startY, startHeight, hour, onResize]);
 
   return (
     <div

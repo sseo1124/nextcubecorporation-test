@@ -85,15 +85,6 @@ export const MOCK_SCHEDULE_ITEMS: ScheduleItem[] = [
     color: "sky",
     status: "planned",
   },
-  // 완전 포함 테스트: 10:00~10:20 (위 두 블록 안에 완전히 포함)
-  {
-    id: "plan-5-nested",
-    title: "쉬는시간",
-    startTime: "10:00",
-    endTime: "10:20",
-    color: "butter",
-    status: "planned",
-  },
   {
     id: "plan-6",
     title: "국어 비문학",

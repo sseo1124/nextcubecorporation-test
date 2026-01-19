@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import type { ScheduleItem, ScheduleStatus } from "@/lib/types";
 
 /**
@@ -53,7 +53,7 @@ export function useScheduleData(initialItems: ScheduleItem[] = []): UseScheduleD
   /**
    * 새 스케줄 아이템 추가
    */
-  const addItem = useCallback((data: ScheduleFormData): ScheduleItem => {
+  const addItem = (data: ScheduleFormData): ScheduleItem => {
     const newItem: ScheduleItem = {
       ...data,
       id: generateId(),
@@ -61,47 +61,41 @@ export function useScheduleData(initialItems: ScheduleItem[] = []): UseScheduleD
     
     setItems((prev) => [...prev, newItem]);
     return newItem;
-  }, []);
+  };
 
   /**
    * 기존 스케줄 아이템 수정
    */
-  const updateItem = useCallback((id: string, data: Partial<ScheduleFormData>): void => {
+  const updateItem = (id: string, data: Partial<ScheduleFormData>): void => {
     setItems((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, ...data } : item
       )
     );
-  }, []);
+  };
 
   /**
    * 스케줄 아이템 삭제
    */
-  const deleteItem = useCallback((id: string): void => {
+  const deleteItem = (id: string): void => {
     setItems((prev) => prev.filter((item) => item.id !== id));
-  }, []);
+  };
 
   // === 파생 데이터 (계산 함수) ===
   
   /**
    * ID로 아이템 조회
    */
-  const getItemById = useCallback(
-    (id: string): ScheduleItem | undefined => {
-      return items.find((item) => item.id === id);
-    },
-    [items]
-  );
+  const getItemById = (id: string): ScheduleItem | undefined => {
+    return items.find((item) => item.id === id);
+  };
 
   /**
    * status로 아이템 필터링
    */
-  const getItemsByStatus = useCallback(
-    (status: ScheduleStatus): ScheduleItem[] => {
-      return items.filter((item) => item.status === status);
-    },
-    [items]
-  );
+  const getItemsByStatus = (status: ScheduleStatus): ScheduleItem[] => {
+    return items.filter((item) => item.status === status);
+  };
 
   return {
     items,
