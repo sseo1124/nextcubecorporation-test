@@ -1,5 +1,6 @@
 import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
 
 interface TimeAxisProps {
   startHour?: number;
@@ -9,7 +10,7 @@ interface TimeAxisProps {
 
 /**
  * 시간축 컴포넌트
- * 00:00 ~ 23:00 시간 레이블 표시
+ * 00:00 ~ 23:00 시간 레이블 표시 + 현재 시간 인디케이터
  * 
  * Props:
  * - startHour: 시작 시간 (기본값: 0)
@@ -41,15 +42,18 @@ export function TimeAxis({
         <div
           key={hour}
           className={cn(
-            "flex items-start justify-end pr-2",
+            "relative flex items-start justify-end pr-2",
             "text-xs font-medium text-muted-foreground",
             "border-b border-border"
           )}
           style={{ height: `${rowHeight}px` }}
+          data-hour={hour}
         >
           <span className="tabular-nums">
             {String(hour).padStart(2, "0")}:00
           </span>
+          {/* 현재 시간 인디케이터 */}
+          <CurrentTimeIndicator hour={hour} rowHeight={rowHeight} />
         </div>
       ))}
     </div>

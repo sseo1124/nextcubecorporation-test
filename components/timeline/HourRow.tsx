@@ -5,6 +5,7 @@ import type { SplitBlock } from "@/lib/types";
 import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ScheduleBlock } from "./ScheduleBlock";
+import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
 import { calculateZIndex } from "@/lib/utils/z-index-calculator";
 
 interface HourRowProps {
@@ -78,6 +79,9 @@ export function HourRow({
           onHover={onBlockHover}
         />
       ))}
+      
+      {/* 현재 시간 인디케이터 */}
+      <CurrentTimeIndicator hour={hour} rowHeight={height} />
     </div>
   );
 }
