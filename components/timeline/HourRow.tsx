@@ -12,7 +12,9 @@ interface HourRowProps {
   blocks: SplitBlock[];
   height?: number;
   selectedBlockId?: string | null;
+  hoveredBlockId?: string | null;
   onBlockClick?: (originalId: string) => void;
+  onBlockHover?: (originalId: string | null) => void;
   onEmptyClick?: (hour: number) => void;
 }
 
@@ -25,7 +27,9 @@ interface HourRowProps {
  * - blocks: 해당 시간대의 SplitBlock 배열
  * - height: Row 높이 (픽셀)
  * - selectedBlockId: 현재 선택된 블록 ID
+ * - hoveredBlockId: 현재 hover 중인 블록 ID
  * - onBlockClick: 블록 클릭 콜백 (역 데이터 흐름)
+ * - onBlockHover: 블록 hover 콜백 (역 데이터 흐름)
  * - onEmptyClick: 빈 영역 클릭 콜백 (역 데이터 흐름)
  * 
  * 파생 데이터:
@@ -36,7 +40,9 @@ export function HourRow({
   blocks, 
   height = DEFAULT_ROW_HEIGHT,
   selectedBlockId,
+  hoveredBlockId,
   onBlockClick,
+  onBlockHover,
   onEmptyClick,
 }: HourRowProps) {
   // 블록별 z-index 계산 (파생 데이터)
@@ -67,7 +73,9 @@ export function HourRow({
           block={block} 
           zIndex={zIndexMap.get(block.id) || 10}
           isSelected={selectedBlockId === block.originalId}
-          onClick={onBlockClick} 
+          isHovered={hoveredBlockId === block.originalId}
+          onClick={onBlockClick}
+          onHover={onBlockHover}
         />
       ))}
     </div>

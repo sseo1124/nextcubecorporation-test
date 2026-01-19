@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { SplitBlock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -14,7 +13,9 @@ interface ScheduleBlockProps {
   block: SplitBlock;
   zIndex?: number;
   isSelected?: boolean;
+  isHovered?: boolean;
   onClick?: (originalId: string) => void;
+  onHover?: (originalId: string | null) => void;
 }
 
 /**
@@ -25,10 +26,11 @@ interface ScheduleBlockProps {
  * - block: SplitBlock (분할된 블록 데이터)
  * - zIndex: 동적으로 계산된 z-index 값
  * - isSelected: 선택된 블록인지 여부
+ * - isHovered: hover 상태 (상위에서 관리, 분할 블록 통합 hover용)
  * - onClick: 블록 클릭 콜백 (역 데이터 흐름)
+ * - onHover: 블록 hover 콜백 (역 데이터 흐름)
  * 
- * State:
- * - isHovered: hover 상태 (z-index 상승용)
+ * State: 없음 (제어 컴포넌트 - hover 상태는 상위에서 관리)
  * 
  * 투명도 시스템:
  * - 기본: 60% 투명도 (겹치는 블록이 보이도록)
@@ -44,10 +46,10 @@ export function ScheduleBlock({
   block, 
   zIndex = 10, 
   isSelected = false,
-  onClick 
+  isHovered = false,
+  onClick,
+  onHover,
 }: ScheduleBlockProps) {
-  // hover 상태 관리 (z-index 상승용)
-  const [isHovered, setIsHovered] = useState(false);
 
   // 색상별 배경색 클래스 매핑 (60% 투명도 버전)
   const colorClasses: Record<string, { base: string; solid: string }> = {
@@ -113,6 +115,19 @@ export function ScheduleBlock({
     }
   };
 
+  // hover 핸들러 (상위 컴포넌트로 전달)
+  const handleMouseEnter = () => {
+    if (onHover) {
+      onHover(block.originalId);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (onHover) {
+      onHover(null);
+    }
+  };
+
   // 동적 z-index 계산 (hover/selected 시 상승)
   const computedZIndex = isHovered || isSelected 
     ? zIndex + HOVER_Z_INDEX_BONUS 
@@ -126,7 +141,7 @@ export function ScheduleBlock({
             "absolute left-0 right-0 px-1.5 py-0.5 overflow-hidden",
             "text-xs leading-tight",
             "cursor-pointer transition-all duration-150",
-            "hover:shadow-md",
+            (isHovered || isSelected) && "shadow-md",
             bgColorClass,
             borderClasses,
             roundedClasses,
@@ -140,8 +155,8 @@ export function ScheduleBlock({
             zIndex: computedZIndex,
           }}
           onClick={handleClick}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           {/* 첫 번째 블록에만 title과 description 표시 */}
           {block.isFirstBlock && (

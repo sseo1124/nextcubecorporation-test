@@ -33,6 +33,7 @@ interface TimelineContainerProps {
  * - isFormOpen: 폼 다이얼로그 열림 상태
  * - editingItem: 수정 중인 아이템
  * - selectedBlockId: 현재 선택된 블록 ID (겹침 처리용)
+ * - hoveredBlockId: 현재 hover 중인 블록 ID (분할 블록 통합 hover용)
  * - defaultStatus: 새 아이템 생성 시 기본 status
  * - defaultStartTime/defaultEndTime: 새 아이템 생성 시 기본 시간
  * 
@@ -73,6 +74,9 @@ export function TimelineContainer({
 
   // 선택된 블록 ID (겹침 처리 시 z-index 상승용)
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+
+  // hover 중인 블록 ID (분할 블록 통합 hover용)
+  const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
 
   // 수정 중인 아이템
   const editingItem = editingItemId ? getItemById(editingItemId) : undefined;
@@ -135,6 +139,11 @@ export function TimelineContainer({
     setIsFormOpen(true);
   };
 
+  // 블록 hover 시 (분할 블록 통합 hover)
+  const handleBlockHover = (itemId: string | null) => {
+    setHoveredBlockId(itemId);
+  };
+
   // 다이얼로그 닫힐 때 선택 해제
   const handleFormOpenChange = (open: boolean) => {
     setIsFormOpen(open);
@@ -189,7 +198,9 @@ export function TimelineContainer({
               endHour={endHour}
               rowHeight={DEFAULT_ROW_HEIGHT}
               selectedBlockId={selectedBlockId}
+              hoveredBlockId={hoveredBlockId}
               onBlockClick={handleBlockClick}
+              onBlockHover={handleBlockHover}
               onEmptyClick={handleEmptyClick}
             />
 
@@ -206,7 +217,9 @@ export function TimelineContainer({
               endHour={endHour}
               rowHeight={DEFAULT_ROW_HEIGHT}
               selectedBlockId={selectedBlockId}
+              hoveredBlockId={hoveredBlockId}
               onBlockClick={handleBlockClick}
+              onBlockHover={handleBlockHover}
               onEmptyClick={handleEmptyClick}
             />
           </div>

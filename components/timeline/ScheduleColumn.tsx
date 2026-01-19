@@ -13,7 +13,9 @@ interface ScheduleColumnProps {
   endHour?: number;
   rowHeight?: number;
   selectedBlockId?: string | null;
+  hoveredBlockId?: string | null;
   onBlockClick?: (originalId: string) => void;
+  onBlockHover?: (originalId: string | null) => void;
   onEmptyClick?: (hour: number, status: ScheduleStatus) => void;
 }
 
@@ -29,7 +31,9 @@ interface ScheduleColumnProps {
  * - startHour/endHour: 표시할 시간 범위
  * - rowHeight: Row 높이
  * - selectedBlockId: 현재 선택된 블록 ID
+ * - hoveredBlockId: 현재 hover 중인 블록 ID
  * - onBlockClick: 블록 클릭 콜백 (역 데이터 흐름)
+ * - onBlockHover: 블록 hover 콜백 (역 데이터 흐름)
  * - onEmptyClick: 빈 영역 클릭 콜백 (역 데이터 흐름)
  * 
  * State: 없음 (순수 프레젠테이션 컴포넌트)
@@ -43,7 +47,9 @@ export function ScheduleColumn({
   endHour = 23,
   rowHeight = DEFAULT_ROW_HEIGHT,
   selectedBlockId,
+  hoveredBlockId,
   onBlockClick,
+  onBlockHover,
   onEmptyClick,
 }: ScheduleColumnProps) {
   const hours = Array.from(
@@ -90,7 +96,9 @@ export function ScheduleColumn({
               blocks={hourBlocks}
               height={rowHeight}
               selectedBlockId={selectedBlockId}
+              hoveredBlockId={hoveredBlockId}
               onBlockClick={onBlockClick}
+              onBlockHover={onBlockHover}
               onEmptyClick={handleEmptyClick}
             />
           );
