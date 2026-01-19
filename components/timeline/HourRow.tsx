@@ -6,6 +6,7 @@ import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ScheduleBlock } from "./ScheduleBlock";
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
+import { RowResizeHandle } from "./RowResizeHandle";
 import { calculateZIndex } from "@/lib/utils/z-index-calculator";
 
 interface HourRowProps {
@@ -17,6 +18,7 @@ interface HourRowProps {
   onBlockClick?: (originalId: string) => void;
   onBlockHover?: (originalId: string | null) => void;
   onEmptyClick?: (hour: number) => void;
+  onResize?: (hour: number, newHeight: number) => void;
 }
 
 /**
@@ -32,6 +34,7 @@ interface HourRowProps {
  * - onBlockClick: 블록 클릭 콜백 (역 데이터 흐름)
  * - onBlockHover: 블록 hover 콜백 (역 데이터 흐름)
  * - onEmptyClick: 빈 영역 클릭 콜백 (역 데이터 흐름)
+ * - onResize: Row 높이 변경 콜백 (역 데이터 흐름)
  * 
  * 파생 데이터:
  * - zIndexMap: 블록별 z-index 맵 (겹침 처리용)
@@ -45,6 +48,7 @@ export function HourRow({
   onBlockClick,
   onBlockHover,
   onEmptyClick,
+  onResize,
 }: HourRowProps) {
   // 블록별 z-index 계산 (파생 데이터)
   const zIndexMap = useMemo(() => calculateZIndex(blocks), [blocks]);
@@ -82,6 +86,15 @@ export function HourRow({
       
       {/* 현재 시간 인디케이터 */}
       <CurrentTimeIndicator hour={hour} rowHeight={height} />
+
+      {/* 리사이즈 핸들 */}
+      {onResize && (
+        <RowResizeHandle
+          hour={hour}
+          currentHeight={height}
+          onResize={onResize}
+        />
+      )}
     </div>
   );
 }

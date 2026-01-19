@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import type { ScheduleData, ScheduleStatus } from "@/lib/types";
-import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
+import { DEFAULT_ROW_HEIGHT, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT } from "@/lib/constants";
 import { splitScheduleItems, groupBlocksByHour } from "@/lib/utils/schedule-splitter";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -34,6 +34,7 @@ interface TimelineContainerProps {
  * - editingItem: 수정 중인 아이템
  * - selectedBlockId: 현재 선택된 블록 ID (겹침 처리용)
  * - hoveredBlockId: 현재 hover 중인 블록 ID (분할 블록 통합 hover용)
+ * - rowHeights: 시간별 Row 높이 (동적 리사이징용)
  * - defaultStatus: 새 아이템 생성 시 기본 status
  * - defaultStartTime/defaultEndTime: 새 아이템 생성 시 기본 시간
  * 
@@ -83,6 +84,16 @@ export function TimelineContainer({
   // hover 중인 블록 ID (분할 블록 통합 hover용)
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
 
+  // 시간별 Row 높이 (동적 리사이징용)
+  // 초기값: 모든 시간대 DEFAULT_ROW_HEIGHT
+  const [rowHeights, setRowHeights] = useState<Record<number, number>>(() => {
+    const heights: Record<number, number> = {};
+    for (let i = 0; i < 24; i++) {
+      heights[i] = DEFAULT_ROW_HEIGHT;
+    }
+    return heights;
+  });
+
   // 스크롤 영역 ref (자동 스크롤용)
   const scrollViewportRef = useRef<HTMLDivElement>(null);
 
@@ -96,11 +107,15 @@ export function TimelineContainer({
 
       const currentHour = new Date().getHours();
       
-      // 현재 시간 Row의 스크롤 위치 계산
-      // (헤더 높이 + 현재 시간까지의 Row 높이) - 뷰포트 중앙 정렬을 위한 오프셋
-      const rowOffset = HEADER_HEIGHT + (currentHour * DEFAULT_ROW_HEIGHT);
+      // 현재 시간 Row의 스크롤 위치 계산 (가변 높이 고려)
+      let rowOffset = HEADER_HEIGHT;
+      for (let i = 0; i < currentHour; i++) {
+        rowOffset += rowHeights[i] || DEFAULT_ROW_HEIGHT;
+      }
+      
+      const currentRowHeight = rowHeights[currentHour] || DEFAULT_ROW_HEIGHT;
       const viewportHeight = scrollViewportRef.current.clientHeight;
-      const centerOffset = viewportHeight / 2 - DEFAULT_ROW_HEIGHT / 2;
+      const centerOffset = viewportHeight / 2 - currentRowHeight / 2;
       
       // 스크롤 위치 (중앙 정렬, 최소 0)
       const scrollTop = Math.max(0, rowOffset - centerOffset);
@@ -114,7 +129,8 @@ export function TimelineContainer({
     // 약간의 지연 후 스크롤 (렌더링 완료 대기)
     const timeoutId = setTimeout(scrollToCurrentTime, 100);
     return () => clearTimeout(timeoutId);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 최초 렌더링 시에만 실행
 
   // === 파생 데이터 (계산 가능하므로 State 아님) ===
   // 일주일 날짜 배열
@@ -179,6 +195,17 @@ export function TimelineContainer({
     setHoveredBlockId(itemId);
   };
 
+  // Row 높이 변경 핸들러 (동적 리사이징)
+  const handleRowResize = useCallback((hour: number, newHeight: number) => {
+    // 최소/최대 높이 제한 적용
+    const clampedHeight = Math.max(MIN_ROW_HEIGHT, Math.min(MAX_ROW_HEIGHT, newHeight));
+    
+    setRowHeights((prev) => ({
+      ...prev,
+      [hour]: clampedHeight,
+    }));
+  }, []);
+
   // 다이얼로그 닫힐 때 선택 해제
   const handleFormOpenChange = (open: boolean) => {
     setIsFormOpen(open);
@@ -220,7 +247,7 @@ export function TimelineContainer({
             <TimeAxis
               startHour={startHour}
               endHour={endHour}
-              rowHeight={DEFAULT_ROW_HEIGHT}
+              rowHeights={rowHeights}
             />
 
             {/* 계획 영역 */}
@@ -231,12 +258,13 @@ export function TimelineContainer({
               blocksByHour={blocksByHour}
               startHour={startHour}
               endHour={endHour}
-              rowHeight={DEFAULT_ROW_HEIGHT}
+              rowHeights={rowHeights}
               selectedBlockId={selectedBlockId}
               hoveredBlockId={hoveredBlockId}
               onBlockClick={handleBlockClick}
               onBlockHover={handleBlockHover}
               onEmptyClick={handleEmptyClick}
+              onRowResize={handleRowResize}
             />
 
             {/* 구분선 */}
@@ -250,12 +278,13 @@ export function TimelineContainer({
               blocksByHour={blocksByHour}
               startHour={startHour}
               endHour={endHour}
-              rowHeight={DEFAULT_ROW_HEIGHT}
+              rowHeights={rowHeights}
               selectedBlockId={selectedBlockId}
               hoveredBlockId={hoveredBlockId}
               onBlockClick={handleBlockClick}
               onBlockHover={handleBlockHover}
               onEmptyClick={handleEmptyClick}
+              onRowResize={handleRowResize}
             />
           </div>
         </ScrollArea>

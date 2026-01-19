@@ -5,7 +5,7 @@ import { CurrentTimeIndicator } from "./CurrentTimeIndicator";
 interface TimeAxisProps {
   startHour?: number;
   endHour?: number;
-  rowHeight?: number;
+  rowHeights: Record<number, number>;
 }
 
 /**
@@ -15,14 +15,14 @@ interface TimeAxisProps {
  * Props:
  * - startHour: 시작 시간 (기본값: 0)
  * - endHour: 종료 시간 (기본값: 23)
- * - rowHeight: Row 높이 (픽셀)
+ * - rowHeights: 시간별 Row 높이 맵
  * 
  * State: 없음 (순수 프레젠테이션 컴포넌트)
  */
 export function TimeAxis({
   startHour = 0,
   endHour = 23,
-  rowHeight = DEFAULT_ROW_HEIGHT,
+  rowHeights,
 }: TimeAxisProps) {
   const hours = Array.from(
     { length: endHour - startHour + 1 },
@@ -38,24 +38,28 @@ export function TimeAxis({
       <div className="h-[34px] border-b border-border" />
       
       {/* 시간 레이블 */}
-      {hours.map((hour) => (
-        <div
-          key={hour}
-          className={cn(
-            "relative flex items-start justify-end pr-2",
-            "text-xs font-medium text-muted-foreground",
-            "border-b border-border"
-          )}
-          style={{ height: `${rowHeight}px` }}
-          data-hour={hour}
-        >
-          <span className="tabular-nums">
-            {String(hour).padStart(2, "0")}:00
-          </span>
-          {/* 현재 시간 인디케이터 */}
-          <CurrentTimeIndicator hour={hour} rowHeight={rowHeight} />
-        </div>
-      ))}
+      {hours.map((hour) => {
+        const height = rowHeights[hour] || DEFAULT_ROW_HEIGHT;
+        
+        return (
+          <div
+            key={hour}
+            className={cn(
+              "relative flex items-start justify-end pr-2",
+              "text-xs font-medium text-muted-foreground",
+              "border-b border-border"
+            )}
+            style={{ height: `${height}px` }}
+            data-hour={hour}
+          >
+            <span className="tabular-nums">
+              {String(hour).padStart(2, "0")}:00
+            </span>
+            {/* 현재 시간 인디케이터 */}
+            <CurrentTimeIndicator hour={hour} rowHeight={height} />
+          </div>
+        );
+      })}
     </div>
   );
 }

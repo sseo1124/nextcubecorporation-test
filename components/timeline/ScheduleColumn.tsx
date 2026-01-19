@@ -11,12 +11,13 @@ interface ScheduleColumnProps {
   blocksByHour: Map<number, SplitBlock[]>;
   startHour?: number;
   endHour?: number;
-  rowHeight?: number;
+  rowHeights: Record<number, number>;
   selectedBlockId?: string | null;
   hoveredBlockId?: string | null;
   onBlockClick?: (originalId: string) => void;
   onBlockHover?: (originalId: string | null) => void;
   onEmptyClick?: (hour: number, status: ScheduleStatus) => void;
+  onRowResize?: (hour: number, newHeight: number) => void;
 }
 
 /**
@@ -29,12 +30,13 @@ interface ScheduleColumnProps {
  * - totalHours: 총 시간
  * - blocksByHour: 시간별 블록 맵
  * - startHour/endHour: 표시할 시간 범위
- * - rowHeight: Row 높이
+ * - rowHeights: 시간별 Row 높이 맵
  * - selectedBlockId: 현재 선택된 블록 ID
  * - hoveredBlockId: 현재 hover 중인 블록 ID
  * - onBlockClick: 블록 클릭 콜백 (역 데이터 흐름)
  * - onBlockHover: 블록 hover 콜백 (역 데이터 흐름)
  * - onEmptyClick: 빈 영역 클릭 콜백 (역 데이터 흐름)
+ * - onRowResize: Row 높이 변경 콜백 (역 데이터 흐름)
  * 
  * State: 없음 (순수 프레젠테이션 컴포넌트)
  */
@@ -45,12 +47,13 @@ export function ScheduleColumn({
   blocksByHour,
   startHour = 0,
   endHour = 23,
-  rowHeight = DEFAULT_ROW_HEIGHT,
+  rowHeights,
   selectedBlockId,
   hoveredBlockId,
   onBlockClick,
   onBlockHover,
   onEmptyClick,
+  onRowResize,
 }: ScheduleColumnProps) {
   const hours = Array.from(
     { length: endHour - startHour + 1 },
@@ -94,12 +97,13 @@ export function ScheduleColumn({
               key={hour}
               hour={hour}
               blocks={hourBlocks}
-              height={rowHeight}
+              height={rowHeights[hour] || DEFAULT_ROW_HEIGHT}
               selectedBlockId={selectedBlockId}
               hoveredBlockId={hoveredBlockId}
               onBlockClick={onBlockClick}
               onBlockHover={onBlockHover}
               onEmptyClick={handleEmptyClick}
+              onResize={onRowResize}
             />
           );
         })}
