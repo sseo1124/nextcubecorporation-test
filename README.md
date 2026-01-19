@@ -14,6 +14,7 @@
 - [구현 프롬프트 및 커밋 히스토리](#구현-프롬프트-및-커밋-히스토리)
 
 ## 🚀 라이브 데모
+<img width="565" height="726" alt="스크린샷 2026-01-19 오후 4 14 36" src="https://github.com/user-attachments/assets/0350ae5e-616c-498b-ac1f-69265abbbf8b" />
 
 프로젝트가 Vercel에 배포되어 있으며, 아래 링크에서 바로 사용해볼 수 있습니다:
 
