@@ -65,7 +65,7 @@ export const MOCK_SCHEDULE_ITEMS: ScheduleItem[] = [
     status: "planned",
   },
 
-  // 🌞 오전 (09:00 ~ 11:59)
+  // 🌞 오전 (09:00 ~ 11:59) - 겹침 테스트 포함
   {
     id: "plan-5",
     title: "수학 문제풀이",
@@ -73,6 +73,25 @@ export const MOCK_SCHEDULE_ITEMS: ScheduleItem[] = [
     startTime: "09:00",
     endTime: "11:00",
     color: "mint",
+    status: "planned",
+  },
+  // 겹침 테스트: 09:30~10:30 (수학 문제풀이와 겹침)
+  {
+    id: "plan-5-overlap",
+    title: "수학 질문",
+    description: "선생님께 질문하기",
+    startTime: "09:30",
+    endTime: "10:30",
+    color: "sky",
+    status: "planned",
+  },
+  // 완전 포함 테스트: 10:00~10:20 (위 두 블록 안에 완전히 포함)
+  {
+    id: "plan-5-nested",
+    title: "쉬는시간",
+    startTime: "10:00",
+    endTime: "10:20",
+    color: "butter",
     status: "planned",
   },
   {
@@ -103,7 +122,7 @@ export const MOCK_SCHEDULE_ITEMS: ScheduleItem[] = [
     status: "planned",
   },
 
-  // 🌤️ 오후 (14:00 ~ 17:59)
+  // 🌤️ 오후 (14:00 ~ 17:59) - 겹침 테스트 포함
   {
     id: "plan-9",
     title: "화학1",
@@ -113,11 +132,21 @@ export const MOCK_SCHEDULE_ITEMS: ScheduleItem[] = [
     color: "lavender",
     status: "planned",
   },
+  // 겹침 테스트: 15:00~16:30 (화학1과 겹침)
+  {
+    id: "plan-9-overlap",
+    title: "화학 실험",
+    description: "실험실 이동",
+    startTime: "15:00",
+    endTime: "16:30",
+    color: "rose",
+    status: "planned",
+  },
   {
     id: "plan-10",
     title: "사회문화",
     description: "수행평가 준비",
-    startTime: "16:00",
+    startTime: "16:30",
     endTime: "17:30",
     color: "sage",
     status: "planned",
