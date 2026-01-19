@@ -26,54 +26,61 @@ export function splitScheduleItem(item: ScheduleItem): SplitBlock[] {
   let currentHour = startTime.hour;
   const endHour = endTime.hour;
   
-  while (currentHour <= endHour) {
-    // 현재 시간 Row의 범위: [currentHour:00, currentHour+1:00)
-    // 즉, currentHour:00 포함, currentHour+1:00 미포함
+  // 먼저 총 블록 수를 계산하여 isLastBlock 판단에 사용
+  const tempBlocks: Array<{
+    hour: number;
+    blockStartMinute: number;
+    blockEndMinute: number;
+  }> = [];
+  
+  let tempHour = currentHour;
+  while (tempHour <= endHour) {
+    const blockStartMinute = tempHour === startTime.hour ? startTime.minute : 0;
+    const blockEndMinute = tempHour === endHour ? endTime.minute : 60;
     
-    // 이 Row에서 블록이 시작하는 분 결정
-    // - 첫 번째 Row이면 startTime.minute
-    // - 그 외는 0분
-    const blockStartMinute = currentHour === startTime.hour ? startTime.minute : 0;
-    
-    // 이 Row에서 블록이 끝나는 분 결정
-    // - 마지막 Row이고 endTime이 현재 시간 내에 있으면 endTime.minute
-    // - 그 외는 60분 (다음 시간의 0분, exclusive)
-    const blockEndMinute = currentHour === endHour ? endTime.minute : 60;
-    
-    // 블록이 실제로 이 Row에 존재하는지 확인
-    // blockStartMinute < blockEndMinute 이어야 함
     if (blockStartMinute < blockEndMinute) {
-      // Row 내 상대 위치 계산 (topPercent)
-      // Row는 0분부터 60분까지이므로, 시작 분을 퍼센트로 변환
-      const topPercent = (blockStartMinute / 60) * 100;
-      
-      // Row 내 상대 높이 계산 (heightPercent)
-      // 블록이 차지하는 분을 퍼센트로 변환
-      const blockDurationMinutes = blockEndMinute - blockStartMinute;
-      const heightPercent = (blockDurationMinutes / 60) * 100;
-      
-      // SplitBlock 생성
-      // endMinute는 0~60 범위 (60은 다음 시간의 0분, 즉 시간 경계를 의미)
-      const block: SplitBlock = {
-        id: `${item.id}-${currentHour}-${blockStartMinute}`, // 고유 ID 생성
-        originalId: item.id,
-        title: item.title,
-        description: item.description,
-        color: item.color,
-        status: item.status,
-        hour: currentHour,
-        startMinute: blockStartMinute,
-        endMinute: blockEndMinute, // 60은 시간 경계(다음 시간의 0분)를 의미
-        topPercent,
-        heightPercent,
-      };
-      
-      blocks.push(block);
+      tempBlocks.push({ hour: tempHour, blockStartMinute, blockEndMinute });
     }
-    
-    // 다음 시간으로 이동
-    currentHour++;
+    tempHour++;
   }
+  
+  const totalBlocks = tempBlocks.length;
+  
+  // 실제 블록 생성
+  tempBlocks.forEach((temp, index) => {
+    const { hour, blockStartMinute, blockEndMinute } = temp;
+    
+    // Row 내 상대 위치 계산 (topPercent)
+    const topPercent = (blockStartMinute / 60) * 100;
+    
+    // Row 내 상대 높이 계산 (heightPercent)
+    const blockDurationMinutes = blockEndMinute - blockStartMinute;
+    const heightPercent = (blockDurationMinutes / 60) * 100;
+    
+    const isFirstBlock = index === 0;
+    const isLastBlock = index === totalBlocks - 1;
+    
+    // SplitBlock 생성
+    const block: SplitBlock = {
+      id: `${item.id}-${hour}-${blockStartMinute}`,
+      originalId: item.id,
+      title: item.title,
+      description: item.description,
+      color: item.color,
+      status: item.status,
+      hour,
+      startMinute: blockStartMinute,
+      endMinute: blockEndMinute,
+      topPercent,
+      heightPercent,
+      isFirstBlock,
+      isLastBlock,
+      originalStartTime: item.startTime, // 원본 시작 시간
+      originalEndTime: item.endTime, // 원본 종료 시간
+    };
+    
+    blocks.push(block);
+  });
   
   return blocks;
 }

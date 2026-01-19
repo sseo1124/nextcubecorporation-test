@@ -37,7 +37,7 @@ export interface ScheduleItem {
  * 시간 경계 기준으로 분할된 블록 (시간 Row에 배치됨)
  */
 export interface SplitBlock {
-  id: string; // 원본 ScheduleItem의 id
+  id: string; // 고유 ID (originalId-hour-startMinute)
   originalId: string; // 원본 ScheduleItem의 id (추적용)
   title: string;
   description?: string;
@@ -48,6 +48,12 @@ export interface SplitBlock {
   endMinute: number; // 0~60, 해당 시간 내 종료 분 (60은 다음 시간의 0분, 즉 시간 경계)
   topPercent: number; // Row 내 상대 위치 (0~100%)
   heightPercent: number; // Row 내 상대 높이 (0~100%)
+  // 연속 블록 시각적 연결용 플래그
+  isFirstBlock: boolean; // 여러 Row에 걸친 블록 중 첫 번째 블록인지 여부
+  isLastBlock: boolean; // 여러 Row에 걸친 블록 중 마지막 블록인지 여부
+  // 원본 스케줄 시간 정보 (Tooltip용)
+  originalStartTime: string; // 원본 시작 시간 "HH:mm"
+  originalEndTime: string; // 원본 종료 시간 "HH:mm"
   zIndex?: number; // 겹침 처리용 z-index
 }
 

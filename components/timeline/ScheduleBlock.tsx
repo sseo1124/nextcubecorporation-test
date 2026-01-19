@@ -20,6 +20,12 @@ interface ScheduleBlockProps {
  * - block: SplitBlock (분할된 블록 데이터)
  * 
  * State: 없음 (순수 프레젠테이션 컴포넌트)
+ * 
+ * 연속 블록 시각적 연결:
+ * - isFirstBlock: 상단 border + 상단 rounded
+ * - isLastBlock: 하단 border + 하단 rounded
+ * - 중간 블록: border 없음, rounded 없음
+ * - 단일 블록 (isFirstBlock && isLastBlock): 전체 border + 전체 rounded
  */
 export function ScheduleBlock({ block }: ScheduleBlockProps) {
   // 색상별 배경색 클래스 매핑
@@ -36,21 +42,38 @@ export function ScheduleBlock({ block }: ScheduleBlockProps) {
 
   const bgColorClass = colorClasses[block.color] || "bg-gray-200";
 
-  // 시간 포맷팅
-  const formatTime = (hour: number, minute: number) => {
-    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-  };
+  // 연속 블록 시각적 연결을 위한 border/rounded 클래스 결정
+  const isSingleBlock = block.isFirstBlock && block.isLastBlock;
+  const isMiddleBlock = !block.isFirstBlock && !block.isLastBlock;
 
-  const startTimeStr = formatTime(block.hour, block.startMinute);
-  const endTimeStr = block.endMinute === 60 
-    ? formatTime(block.hour + 1, 0)
-    : formatTime(block.hour, block.endMinute);
+  const borderClasses = cn(
+    // 좌우 border는 항상 표시
+    "border-l border-r border-black/10",
+    // 상단 border: 첫 번째 블록만
+    block.isFirstBlock && "border-t",
+    // 하단 border: 마지막 블록만
+    block.isLastBlock && "border-b",
+    // 중간 블록은 상하 border 없음
+    isMiddleBlock && "border-t-0 border-b-0"
+  );
 
+  const roundedClasses = cn(
+    // 단일 블록: 전체 rounded
+    isSingleBlock && "rounded-sm",
+    // 첫 번째 블록만: 상단만 rounded
+    block.isFirstBlock && !block.isLastBlock && "rounded-t-sm rounded-b-none",
+    // 마지막 블록만: 하단만 rounded
+    block.isLastBlock && !block.isFirstBlock && "rounded-b-sm rounded-t-none",
+    // 중간 블록: rounded 없음
+    isMiddleBlock && "rounded-none"
+  );
+
+  // Tooltip에 원본 시간 정보 표시
   const tooltipContent = (
     <div className="space-y-1">
       <div className="font-medium">{block.title}</div>
       <div className="text-xs opacity-80">
-        {startTimeStr} ~ {endTimeStr}
+        {block.originalStartTime} ~ {block.originalEndTime}
       </div>
       {block.description && (
         <div className="text-xs whitespace-pre-line">{block.description}</div>
@@ -63,12 +86,13 @@ export function ScheduleBlock({ block }: ScheduleBlockProps) {
       <TooltipTrigger asChild>
         <div
           className={cn(
-            "absolute left-0 right-0 rounded-sm px-1.5 py-0.5 overflow-hidden",
+            "absolute left-0 right-0 px-1.5 py-0.5 overflow-hidden",
             "text-xs leading-tight",
-            "border border-black/10",
             "cursor-pointer transition-all duration-150",
             "opacity-80 hover:opacity-100 hover:shadow-sm",
-            bgColorClass
+            bgColorClass,
+            borderClasses,
+            roundedClasses
           )}
           style={{
             top: `${block.topPercent}%`,
@@ -76,11 +100,16 @@ export function ScheduleBlock({ block }: ScheduleBlockProps) {
             minHeight: "18px",
           }}
         >
-          <div className="font-medium truncate">{block.title}</div>
-          {block.heightPercent > 30 && block.description && (
-            <div className="text-[10px] text-black/70 truncate whitespace-pre-line line-clamp-2">
-              {block.description}
-            </div>
+          {/* 첫 번째 블록에만 title과 description 표시 */}
+          {block.isFirstBlock && (
+            <>
+              <div className="font-medium truncate">{block.title}</div>
+              {block.heightPercent > 30 && block.description && (
+                <div className="text-[10px] text-black/70 truncate whitespace-pre-line line-clamp-2">
+                  {block.description}
+                </div>
+              )}
+            </>
           )}
         </div>
       </TooltipTrigger>
