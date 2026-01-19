@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import type { ScheduleData, ScheduleStatus } from "@/lib/types";
 import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import { splitScheduleItems, groupBlocksByHour } from "@/lib/utils/schedule-splitter";
@@ -45,7 +45,12 @@ interface TimelineContainerProps {
  * 
  * 상수:
  * - startHour/endHour: 항상 0~23 (24개 Row, PRD 명세)
+ * - HEADER_HEIGHT: 헤더 높이 (스크롤 오프셋 계산용)
  */
+
+// 헤더 높이 상수 (ScheduleColumn 헤더와 동일)
+const HEADER_HEIGHT = 34;
+
 export function TimelineContainer({
   scheduleData,
   defaultDate,
@@ -78,8 +83,38 @@ export function TimelineContainer({
   // hover 중인 블록 ID (분할 블록 통합 hover용)
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
 
+  // 스크롤 영역 ref (자동 스크롤용)
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+
   // 수정 중인 아이템
   const editingItem = editingItemId ? getItemById(editingItemId) : undefined;
+
+  // === 최초 렌더링 시 현재 시간대로 자동 스크롤 ===
+  useEffect(() => {
+    const scrollToCurrentTime = () => {
+      if (!scrollViewportRef.current) return;
+
+      const currentHour = new Date().getHours();
+      
+      // 현재 시간 Row의 스크롤 위치 계산
+      // (헤더 높이 + 현재 시간까지의 Row 높이) - 뷰포트 중앙 정렬을 위한 오프셋
+      const rowOffset = HEADER_HEIGHT + (currentHour * DEFAULT_ROW_HEIGHT);
+      const viewportHeight = scrollViewportRef.current.clientHeight;
+      const centerOffset = viewportHeight / 2 - DEFAULT_ROW_HEIGHT / 2;
+      
+      // 스크롤 위치 (중앙 정렬, 최소 0)
+      const scrollTop = Math.max(0, rowOffset - centerOffset);
+
+      scrollViewportRef.current.scrollTo({
+        top: scrollTop,
+        behavior: "smooth",
+      });
+    };
+
+    // 약간의 지연 후 스크롤 (렌더링 완료 대기)
+    const timeoutId = setTimeout(scrollToCurrentTime, 100);
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // === 파생 데이터 (계산 가능하므로 State 아님) ===
   // 일주일 날짜 배열
@@ -179,7 +214,7 @@ export function TimelineContainer({
         />
 
         {/* 타임라인 본문 */}
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1" viewportRef={scrollViewportRef}>
           <div className="flex min-h-full">
             {/* 시간축 */}
             <TimeAxis
