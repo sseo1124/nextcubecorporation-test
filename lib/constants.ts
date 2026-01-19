@@ -81,6 +81,7 @@ export const TEXT_DISPLAY_THRESHOLD_MEDIUM = 60; // 이보다 크면 전체 표�
  * 
  * 시간 블록 기본: 10~100 (겹침 처리용 동적 계산)
  * 시간 블록 hover: 기본 + 100 = 최대 200
+ * Row Resize Handle: 300 (시간 블록 hover보다 위)
  * Dialog Overlay: 1000
  * Dialog Content: 1001
  */
@@ -88,6 +89,7 @@ export const Z_INDEX = {
   BLOCK_BASE: 10,
   BLOCK_MAX: 100,
   BLOCK_HOVER_BONUS: 100,
+  ROW_RESIZE_HANDLE: 300,
   DIALOG_OVERLAY: 1000,
   DIALOG_CONTENT: 1001,
 } as const;
