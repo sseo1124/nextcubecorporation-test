@@ -1,16 +1,24 @@
 "use client";
 
+import { useMemo } from "react";
 import type { SplitBlock } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { DEFAULT_ROW_HEIGHT } from "@/lib/constants";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HOVER_Z_INDEX_BONUS } from "@/lib/utils/z-index-calculator";
+import { 
+  calculateActualHeight, 
+  getDisplayText, 
+  type TextDisplayMode 
+} from "@/lib/utils/text-display";
 
 interface ScheduleBlockProps {
   block: SplitBlock;
+  rowHeight?: number;
   zIndex?: number;
   isSelected?: boolean;
   isHovered?: boolean;
@@ -24,6 +32,7 @@ interface ScheduleBlockProps {
  * 
  * Props:
  * - block: SplitBlock (분할된 블록 데이터)
+ * - rowHeight: Row의 높이 (픽셀) - 텍스트 표시 모드 계산에 사용
  * - zIndex: 동적으로 계산된 z-index 값
  * - isSelected: 선택된 블록인지 여부
  * - isHovered: hover 상태 (상위에서 관리, 분할 블록 통합 hover용)
@@ -41,9 +50,15 @@ interface ScheduleBlockProps {
  * - isLastBlock: 하단 border + 하단 rounded
  * - 중간 블록: border 없음, rounded 없음
  * - 단일 블록 (isFirstBlock && isLastBlock): 전체 border + 전체 rounded
+ * 
+ * 텍스트 오버플로우 처리 (동적 Row 높이 기반):
+ * - < 30px: 제목만 표시 (truncate)
+ * - 30px ~ 60px: 제목 + 설명 1줄 (truncate)
+ * - ≥ 60px: 제목 + 설명 전체
  */
 export function ScheduleBlock({ 
   block, 
+  rowHeight = DEFAULT_ROW_HEIGHT,
   zIndex = 10, 
   isSelected = false,
   isHovered = false,
@@ -67,6 +82,12 @@ export function ScheduleBlock({
   
   // hover 또는 selected 상태일 때 불투명(solid) 색상 사용
   const bgColorClass = (isHovered || isSelected) ? colorClass.solid : colorClass.base;
+
+  // 블록의 실제 픽셀 높이 계산 및 텍스트 표시 모드 결정 (파생 데이터)
+  const displayText = useMemo(() => {
+    const actualHeight = calculateActualHeight(rowHeight, block.heightPercent);
+    return getDisplayText(block.title, block.description, actualHeight);
+  }, [rowHeight, block.heightPercent, block.title, block.description]);
 
   // 연속 블록 시각적 연결을 위한 border/rounded 클래스 결정
   const isSingleBlock = block.isFirstBlock && block.isLastBlock;
@@ -160,14 +181,7 @@ export function ScheduleBlock({
         >
           {/* 첫 번째 블록에만 title과 description 표시 */}
           {block.isFirstBlock && (
-            <>
-              <div className="font-medium truncate">{block.title}</div>
-              {block.heightPercent > 30 && block.description && (
-                <div className="text-[10px] text-black/70 truncate whitespace-pre-line line-clamp-2">
-                  {block.description}
-                </div>
-              )}
-            </>
+            <TextContent displayText={displayText} />
           )}
         </div>
       </TooltipTrigger>
@@ -176,4 +190,65 @@ export function ScheduleBlock({
       </TooltipContent>
     </Tooltip>
   );
+}
+
+/**
+ * 텍스트 콘텐츠 컴포넌트
+ * 텍스트 표시 모드에 따라 다르게 렌더링
+ * 
+ * 모드별 렌더링:
+ * - title-only: 제목만 (truncate)
+ * - title-description-truncate: 제목 + 설명 1줄 (둘 다 truncate)
+ * - full: 제목 + 설명 전체 (line-clamp로 제한)
+ */
+interface TextContentProps {
+  displayText: {
+    title: string;
+    description: string | null;
+    mode: TextDisplayMode;
+  };
+}
+
+function TextContent({ displayText }: TextContentProps) {
+  const { title, description, mode } = displayText;
+
+  switch (mode) {
+    case "title-only":
+      // 높이 < 30px: 제목만 표시 (truncate)
+      return (
+        <div className="font-medium truncate text-[11px] leading-tight">
+          {title}
+        </div>
+      );
+
+    case "title-description-truncate":
+      // 30px ~ 60px: 제목 + 설명 1줄 (truncate)
+      return (
+        <>
+          <div className="font-medium truncate text-xs leading-tight">
+            {title}
+          </div>
+          {description && (
+            <div className="text-[10px] text-black/70 truncate mt-0.5">
+              {description}
+            </div>
+          )}
+        </>
+      );
+
+    case "full":
+      // 60px 이상: 제목 + 설명 전체 (line-clamp로 제한)
+      return (
+        <>
+          <div className="font-medium text-xs leading-tight">
+            {title}
+          </div>
+          {description && (
+            <div className="text-[10px] text-black/70 mt-0.5 line-clamp-3 whitespace-pre-line">
+              {description}
+            </div>
+          )}
+        </>
+      );
+  }
 }

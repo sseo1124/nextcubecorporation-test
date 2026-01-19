@@ -71,11 +71,12 @@ export function HourRow({
       data-hour={hour}
       onClick={handleRowClick}
     >
-      {/* 블록들 렌더링 (z-index 적용) */}
+      {/* 블록들 렌더링 (z-index 적용, rowHeight 전달로 텍스트 표시 모드 계산) */}
       {blocks.map((block) => (
         <ScheduleBlock 
           key={block.id} 
-          block={block} 
+          block={block}
+          rowHeight={height}
           zIndex={zIndexMap.get(block.id) || 10}
           isSelected={selectedBlockId === block.originalId}
           isHovered={hoveredBlockId === block.originalId}
