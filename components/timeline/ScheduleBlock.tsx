@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { SplitBlock } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -7,9 +8,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { HOVER_Z_INDEX_BONUS } from "@/lib/utils/z-index-calculator";
 
 interface ScheduleBlockProps {
   block: SplitBlock;
+  zIndex?: number;
+  isSelected?: boolean;
   onClick?: (originalId: string) => void;
 }
 
@@ -19,9 +23,16 @@ interface ScheduleBlockProps {
  * 
  * Props:
  * - block: SplitBlock (분할된 블록 데이터)
+ * - zIndex: 동적으로 계산된 z-index 값
+ * - isSelected: 선택된 블록인지 여부
  * - onClick: 블록 클릭 콜백 (역 데이터 흐름)
  * 
- * State: 없음 (순수 프레젠테이션 컴포넌트)
+ * State:
+ * - isHovered: hover 상태 (z-index 상승용)
+ * 
+ * 투명도 시스템:
+ * - 기본: 60% 투명도 (겹치는 블록이 보이도록)
+ * - Hover/Selected: 100% 불투명 (강조)
  * 
  * 연속 블록 시각적 연결:
  * - isFirstBlock: 상단 border + 상단 rounded
@@ -29,20 +40,31 @@ interface ScheduleBlockProps {
  * - 중간 블록: border 없음, rounded 없음
  * - 단일 블록 (isFirstBlock && isLastBlock): 전체 border + 전체 rounded
  */
-export function ScheduleBlock({ block, onClick }: ScheduleBlockProps) {
-  // 색상별 배경색 클래스 매핑
-  const colorClasses: Record<string, string> = {
-    lavender: "bg-lavender",
-    mint: "bg-mint",
-    peach: "bg-peach",
-    sky: "bg-sky",
-    rose: "bg-rose",
-    butter: "bg-butter",
-    lilac: "bg-lilac",
-    sage: "bg-sage",
+export function ScheduleBlock({ 
+  block, 
+  zIndex = 10, 
+  isSelected = false,
+  onClick 
+}: ScheduleBlockProps) {
+  // hover 상태 관리 (z-index 상승용)
+  const [isHovered, setIsHovered] = useState(false);
+
+  // 색상별 배경색 클래스 매핑 (60% 투명도 버전)
+  const colorClasses: Record<string, { base: string; solid: string }> = {
+    lavender: { base: "bg-lavender/60", solid: "bg-lavender" },
+    mint: { base: "bg-mint/60", solid: "bg-mint" },
+    peach: { base: "bg-peach/60", solid: "bg-peach" },
+    sky: { base: "bg-sky/60", solid: "bg-sky" },
+    rose: { base: "bg-rose/60", solid: "bg-rose" },
+    butter: { base: "bg-butter/60", solid: "bg-butter" },
+    lilac: { base: "bg-lilac/60", solid: "bg-lilac" },
+    sage: { base: "bg-sage/60", solid: "bg-sage" },
   };
 
-  const bgColorClass = colorClasses[block.color] || "bg-gray-200";
+  const colorClass = colorClasses[block.color] || { base: "bg-gray-200/60", solid: "bg-gray-200" };
+  
+  // hover 또는 selected 상태일 때 불투명(solid) 색상 사용
+  const bgColorClass = (isHovered || isSelected) ? colorClass.solid : colorClass.base;
 
   // 연속 블록 시각적 연결을 위한 border/rounded 클래스 결정
   const isSingleBlock = block.isFirstBlock && block.isLastBlock;
@@ -84,11 +106,17 @@ export function ScheduleBlock({ block, onClick }: ScheduleBlockProps) {
   );
 
   // 클릭 핸들러
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 빈 영역 클릭 이벤트 전파 방지
     if (onClick) {
       onClick(block.originalId);
     }
   };
+
+  // 동적 z-index 계산 (hover/selected 시 상승)
+  const computedZIndex = isHovered || isSelected 
+    ? zIndex + HOVER_Z_INDEX_BONUS 
+    : zIndex;
 
   return (
     <Tooltip>
@@ -98,17 +126,22 @@ export function ScheduleBlock({ block, onClick }: ScheduleBlockProps) {
             "absolute left-0 right-0 px-1.5 py-0.5 overflow-hidden",
             "text-xs leading-tight",
             "cursor-pointer transition-all duration-150",
-            "opacity-80 hover:opacity-100 hover:shadow-sm",
+            "hover:shadow-md",
             bgColorClass,
             borderClasses,
-            roundedClasses
+            roundedClasses,
+            // 선택된 블록 강조
+            isSelected && "ring-2 ring-primary ring-offset-1"
           )}
           style={{
             top: `${block.topPercent}%`,
             height: `${block.heightPercent}%`,
             minHeight: "18px",
+            zIndex: computedZIndex,
           }}
           onClick={handleClick}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
           {/* 첫 번째 블록에만 title과 description 표시 */}
           {block.isFirstBlock && (
